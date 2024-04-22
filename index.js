@@ -186,18 +186,18 @@ class Tree {
         let current = this.root;
         stack.push(current);
         while (stack.length !== 0) {
-            current = stack.pop();
             let leftNode = current.left;
             let rightNode = current.right;
             // check the left branch
-            while (leftNode !== null) {
+            if (leftNode !== null) {
                 stack.push(leftNode);
                 leftNode = leftNode.left;
             }
             // visit the current node
-            current.value = callback(current.value);
+            current = stack.pop();
+            if (current !== undefined) { callback(current.value); }
             // check the right branch
-            while (rightNode !== null) {
+            if (rightNode !== null) {
                 stack.push(rightNode);
                 rightNode = rightNode.right;
             }
@@ -210,16 +210,16 @@ class Tree {
         while (stack.length !== 0) {
             // visit the current node
             current = stack.pop();
-            current.value = callback(current.value);
+            if (current !== undefined) { callback(current.value); }
             let leftNode = current.left;
             let rightNode = current.right;
             // check the left branch
-            while (leftNode !== null) {
+            if (leftNode !== null) {
                 stack.push(leftNode);
                 leftNode = leftNode.left;
             }
             // check the right branch
-            while (rightNode !== null) {
+            if (rightNode !== null) {
                 stack.push(rightNode);
                 rightNode = rightNode.right;
             }
@@ -230,21 +230,21 @@ class Tree {
         let current = this.root;
         stack.push(current);
         while (stack.length !== 0) {
-            current = stack.pop();
             let leftNode = current.left;
             let rightNode = current.right;
             // check the left branch
-            while (leftNode !== null) {
+            if (leftNode !== null) {
                 stack.push(leftNode);
                 leftNode = leftNode.left;
             }
             // check the right branch
-            while (rightNode !== null) {
+            if (rightNode !== null) {
                 stack.push(rightNode);
                 rightNode = rightNode.right;
             }
             // visit the current node
-            current.value = callback(current.value);
+            current = stack.pop();
+            if (current !== undefined) { callback(current.value); }
         }
     }
     height(node) {
@@ -254,13 +254,58 @@ class Tree {
         let rightHeight = this.height(node.right);
         return Math.max(leftHeight, rightHeight) + 1;
     }
-    depth(node) {
+    depth(recNode, node, level) {
+        if (level == undefined) { level = 0; }
+        // if we recusred to it, return
         if (node == null) { return -1 }
         if (node == this.root) { return 0 }
-                
+        // if not, keep looking for the node
+        // if the value of our node if higher than the current recNode
+        if (node.value > recNode.value) {
+            if (recNode.right !== null) {
+                // check if the right node is the correct one
+                if (recNode.right.value == node.value) {
+                    // found our node
+                    level++;
+                    return level;
+                // if it isn't, keep traversing
+                } else {
+                    level++;
+                    return this.depth(recNode.right, node, level);
+                }
+            } else {
+                console.log('Value does not exist in the tree!');
+            }
+        // if the value of our node if lower than the current recNode
+        } else if (node.value < recNode.value) {
+            if (recNode.left !== null) {
+                // check if the left node is the correct one
+                if (recNode.left.value == node.value) {
+                    // found our node
+                    level++;
+                    return level;
+                // if it isn't, keep traversing
+                } else {
+                    level++;
+                    return this.depth(recNode.left, node, level);
+                }
+            } else {
+                level++;
+                console.log('Value does not exist in the tree!');
+            }
+        }        
     }
-    isBalanced(node) {
+    isBalanced() {
+        return this.isBalancedHelper(this.root);
+    }
+    isBalancedHelper(node) {
+        if (node == null || node == undefined) { return true; }
+        let leftHeight = this.height(node.left);
+        let rightHeight = this.height(node.right);
 
+        if (Math.abs(leftHeight - rightHeight) > 1) { return false; }
+
+        return this.isBalancedHelper(node.left) && this.isBalancedHelper(node.right);
     }
     rebalance() {
         // rebuild method:
@@ -351,17 +396,78 @@ let sortedArray = mergeSort(unsortedArray);
 let finalArray = removeDuplicates(sortedArray);
 tree.buildTree(finalArray, 0, finalArray.length - 1);
 prettyPrint(tree.root);
-// console.log('removing 3');
-// tree.delete(tree.root, 3);
+// // console.log('removing 3');
+// // tree.delete(tree.root, 3);
+// // prettyPrint(tree.root);
+// // let x = tree.find(tree.root, 9)
+// // console.log(x);
+// // tree.insert(tree.root, 999);
+// // prettyPrint(tree.root);
+// // const multiplyBy2 = (num) => {
+// //     return num * 2;
+// // }
+// // tree.postOrder(multiplyBy2);
+// // prettyPrint(tree.root);
+// let myNode = tree.find(tree.root, 4);
+// console.log(tree.depth(tree.root, myNode, 0));
+// console.log(tree.isBalanced());
+// tree.insert(tree.root, 9000);
+// tree.insert(tree.root, 9001);
+// tree.insert(tree.root, 9002);
+// tree.insert(tree.root, 9003);
 // prettyPrint(tree.root);
-// let x = tree.find(tree.root, 9)
-// console.log(x);
-// tree.insert(tree.root, 999);
-// prettyPrint(tree.root);
-// const multiplyBy2 = (num) => {
-//     return num * 2;
-// }
-// tree.postOrder(multiplyBy2);
-// prettyPrint(tree.root);
-let node331 = tree.find(tree.root, 331);
-console.log(tree.height(tree.root));
+// console.log(tree.isBalanced());
+tree.inOrder(console.log);
+console.log(' ');
+tree.preOrder(console.log);
+console.log(' ');
+tree.postOrder(console.log);
+console.log(' ');
+
+function knightMoves(start, end) {
+    // Define all possible moves a knight can make
+    const moves = [
+      [-2, -1], [-2, 1], [2, -1], [2, 1],
+      [-1, -2], [-1, 2], [1, -2], [1, 2]
+    ];
+  
+    // Create a queue to store the squares to visit
+    let queue = [[start]];
+    
+    // Create a set to keep track of visited squares
+    let visited = new Set([start.toString()]);
+  
+    // Perform BFS to find the shortest path
+    while (queue.length > 0) {
+      let path = queue.shift();
+      let [x, y] = path[path.length - 1];
+  
+      // Check if we have reached the end square
+      if (x === end[0] && y === end[1]) {
+        return path;
+      }
+  
+      // Explore all possible moves from the current square
+      for (let move of moves) {
+        let newX = x + move[0];
+        let newY = y + move[1];
+        
+        // Check if the new square is valid and not visited
+        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
+          let newPath = [...path, [newX, newY]];
+          let key = newPath[newPath.length - 1].toString();
+          if (!visited.has(key)) {
+            visited.add(key);
+            queue.push(newPath);
+          }
+        }
+      }
+    }
+  
+    // If no path is found, return null
+    return null;
+  }
+  
+  // Example usage
+//   console.log(knightMoves([0, 0], [7, 7])); // Output: [[0, 0], [2, 1], [4, 2], [6, 3], [7, 5], [5, 6], [7, 7]]
+  
